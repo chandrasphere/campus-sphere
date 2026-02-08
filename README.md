@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🏨 Campus Sphere - Hostel & PG Finder
 
-# Run and deploy your AI Studio app
+**Campus Sphere** is a modern web application built to help students find and manage Hostels and PGs near college campuses. It provides a seamless interface to explore staying options with real-time details.
 
-This contains everything you need to run your app locally.
+## 🚀 Key Features
+* **AI ChatBot Integration:** Get instant answers to your queries using an integrated AI assistant.
+* **Detailed Listings:** Explore various Hostels and PGs with all essential information.
+* **Responsive Dashboard:** A clean and professional UI for managing bookings and viewing market trends.
+* **Built with TypeScript:** Ensuring type-safe and reliable code performance.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1io9PiLCrCqv23u37-WjjLDYmckFt2VjP
+## 🛠️ Tech Stack
+* **Frontend:** TypeScript, React (Vite)
+* **Styling:** CSS
+* **AI Engine:** Google Gemini API
+* **Deployment:** Vercel
 
-## Run Locally
+## 📂 Project Structure
+* `components/`: Reusable UI elements like ChatBot, AdminDashboard, and BookingModal.
+* `services/`: API integration and logic for backend services.
 
-**Prerequisites:**  Node.js
+## 💻 Installation & Setup
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/chandrasphere/campus-sphere.git](https://github.com/chandrasphere/campus-sphere.git)
