@@ -1,0 +1,354 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Star, Wifi, Coffee, Wind, Home, Phone, ArrowRight, Loader2, Menu, X, ShieldCheck, LayoutDashboard } from 'lucide-react';
+import { fetchHostelsByCollege } from './services/geminiService';
+import { Hostel, SearchResult, AccommodationType, Booking } from './types';
+import MarketChart from './components/MarketChart';
+import BookingModal from './components/BookingModal';
+import AdminDashboard from './components/AdminDashboard';
+import ChatBot from './components/ChatBot';
+
+const App: React.FC = () => {
+  const [view, setView] = useState<'home' | 'admin'>('home');
+  const [collegeName, setCollegeName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SearchResult | null>(null);
+  const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collegeName.trim()) return;
+
+    setLoading(true);
+    setResult(null);
+    try {
+      const data = await fetchHostelsByCollege(collegeName);
+      setResult(data);
+      
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openBooking = (hostel: Hostel) => {
+    setSelectedHostel(hostel);
+    setIsModalOpen(true);
+  };
+
+  const handleBookingSubmit = (newBooking: Booking) => {
+    setBookings(prev => [newBooking, ...prev]);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+      
+      {/* Navigation */}
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div 
+              className="flex items-center space-x-2 cursor-pointer" 
+              onClick={() => setView('home')}
+            >
+              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center transform rotate-3">
+                <Home className="text-white w-5 h-5" />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-700 to-brand-500">
+                Campus Sphere
+              </span>
+            </div>
+
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center space-x-8">
+              <button onClick={() => setView('home')} className={`${view === 'home' ? 'text-brand-600' : 'text-slate-600 hover:text-brand-600'} font-medium transition-colors`}>Home</button>
+              <button className="text-slate-600 hover:text-brand-600 font-medium transition-colors">List Your Property</button>
+              <button 
+                onClick={() => setView('admin')}
+                className={`${view === 'admin' ? 'text-brand-600' : 'text-slate-600 hover:text-brand-600'} font-medium transition-colors flex items-center gap-2`}
+              >
+                <LayoutDashboard size={16} />
+                Admin Dashboard
+              </button>
+              <button className="bg-slate-900 text-white px-5 py-2 rounded-full font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20">
+                Sign In
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-600 p-2">
+                {isMobileMenuOpen ? <X /> : <Menu />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-slate-100 p-4 space-y-4 shadow-xl">
+             <button onClick={() => { setView('home'); setIsMobileMenuOpen(false); }} className="block w-full text-left text-slate-600 font-medium">Home</button>
+             <button onClick={() => setIsMobileMenuOpen(false)} className="block w-full text-left text-slate-600 font-medium">List Your Property</button>
+             <button onClick={() => { setView('admin'); setIsMobileMenuOpen(false); }} className="block w-full text-left text-slate-600 font-medium">Admin Dashboard</button>
+             <button className="w-full bg-slate-900 text-white px-5 py-3 rounded-lg font-medium">Sign In</button>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content Area */}
+      {view === 'admin' ? (
+        <AdminDashboard bookings={bookings} />
+      ) : (
+        <>
+          {/* Hero Section */}
+          <div className="relative overflow-hidden bg-white">
+            <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 relative z-10">
+              <div className="text-center max-w-3xl mx-auto">
+                <div className="inline-flex items-center space-x-2 bg-brand-50 border border-brand-100 text-brand-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-6">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                  </span>
+                  <span>AI-Powered Search Live Now</span>
+                </div>
+                <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+                  Find your home <br className="hidden sm:block"/>
+                  <span className="text-brand-600">away from home.</span>
+                </h1>
+                <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  Discover trusted hostels and PGs near your campus. We use advanced AI to find the best spots tailored to your college location.
+                </p>
+
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className={`h-6 w-6 transition-colors ${loading ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500'}`} />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-12 pr-4 py-5 bg-white border-2 border-slate-200 rounded-2xl text-lg placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 shadow-xl shadow-slate-200/50 transition-all"
+                    placeholder="Enter your college name (e.g. IIT Bombay, Delhi University)"
+                    value={collegeName}
+                    onChange={(e) => setCollegeName(e.target.value)}
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="absolute right-2 top-2 bottom-2 bg-brand-600 text-white px-6 rounded-xl font-semibold hover:bg-brand-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center"
+                  >
+                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Search'}
+                  </button>
+                </form>
+
+                {/* Quick stats / Social Proof */}
+                <div className="mt-12 flex justify-center space-x-8 text-slate-500 text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-5 h-5 text-green-500" />
+                    <span>Verified Listings</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    <span>4.8/5 Avg Rating</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-5 h-5 text-red-500" />
+                    <span>Close to Campus</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Section */}
+          {result && (
+            <div ref={resultsRef} className="flex-grow bg-slate-50 py-16">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                {/* Location Summary */}
+                <div className="mb-12">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-4">Stays near {collegeName}</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
+                       <p className="text-lg text-slate-600 leading-relaxed">
+                         {result.locationSummary}
+                       </p>
+                       <div className="mt-6 flex space-x-4">
+                          <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium">
+                            Safe Area
+                          </div>
+                          <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-medium">
+                            Student Friendly
+                          </div>
+                          <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg text-sm font-medium">
+                            Good Connectivity
+                          </div>
+                       </div>
+                    </div>
+                    <div className="lg:col-span-1">
+                       <MarketChart data={result.marketInsights} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filters (Visual only for now) */}
+                <div className="flex overflow-x-auto space-x-3 mb-8 pb-2 no-scrollbar">
+                  <button className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium whitespace-nowrap">All Stays</button>
+                  <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Hostels</button>
+                  <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 rounded-full text-sm font-medium whitespace-nowrap transition-colors">PGs</button>
+                  <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Girls Only</button>
+                  <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Boys Only</button>
+                  <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Under ₹10k</button>
+                </div>
+
+                {/* Hostel Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {result.hostels.map((hostel) => (
+                    <div key={hostel.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 flex flex-col h-full">
+                      <div className="relative h-56 overflow-hidden">
+                        <img 
+                          src={`https://picsum.photos/seed/${hostel.id}/400/300`} 
+                          alt={hostel.name} 
+                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-slate-800 shadow-sm">
+                          {hostel.type}
+                        </div>
+                        <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-sm text-white px-2 py-1 rounded-lg flex items-center space-x-1 text-sm font-medium">
+                          <Star size={14} className="text-yellow-400 fill-current" />
+                          <span>{hostel.rating}</span>
+                          <span className="text-slate-400 text-xs">({hostel.reviewCount})</span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-6 flex flex-col flex-grow">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-xl font-bold text-slate-900 line-clamp-1 group-hover:text-brand-600 transition-colors">{hostel.name}</h3>
+                        </div>
+                        
+                        <div className="flex items-center text-slate-500 text-sm mb-4">
+                          <MapPin size={16} className="mr-1" />
+                          <span>{hostel.distance} from campus</span>
+                        </div>
+
+                        <p className="text-slate-600 text-sm mb-6 line-clamp-2">
+                          {hostel.description}
+                        </p>
+
+                        {/* Amenities Preview */}
+                        <div className="flex space-x-3 mb-6">
+                           {hostel.amenities.slice(0, 3).map((amenity, idx) => (
+                             <div key={idx} className="bg-slate-50 p-2 rounded-lg text-slate-500" title={amenity}>
+                               {amenity.toLowerCase().includes('wifi') ? <Wifi size={16} /> : 
+                                amenity.toLowerCase().includes('food') || amenity.toLowerCase().includes('meals') ? <Coffee size={16} /> :
+                                amenity.toLowerCase().includes('ac') ? <Wind size={16} /> :
+                                <div className="text-xs font-medium">{amenity.slice(0, 2)}</div>
+                               }
+                             </div>
+                           ))}
+                           {hostel.amenities.length > 3 && (
+                             <div className="bg-slate-50 px-2 py-2 rounded-lg text-slate-500 text-xs font-medium flex items-center justify-center">
+                               +{hostel.amenities.length - 3}
+                             </div>
+                           )}
+                        </div>
+
+                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-slate-500">Starting from</p>
+                            <p className="text-2xl font-bold text-brand-700">
+                              {hostel.currency === 'INR' ? '₹' : '$'}{hostel.pricePerMonth.toLocaleString()}
+                              <span className="text-sm text-slate-400 font-normal">/mo</span>
+                            </p>
+                          </div>
+                          <button 
+                            onClick={() => openBooking(hostel)}
+                            className="bg-slate-900 text-white p-3 rounded-full hover:bg-brand-600 transition-colors shadow-lg hover:shadow-brand-500/20"
+                          >
+                            <ArrowRight size={20} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-16 text-center">
+                  <button className="bg-white border border-slate-200 text-slate-600 px-8 py-3 rounded-full font-semibold hover:bg-slate-50 transition-colors">
+                    Load More Properties
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-300 py-12 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+                  <Home className="text-white w-5 h-5" />
+                </div>
+                <span className="text-xl font-bold text-white">Campus Sphere</span>
+              </div>
+              <p className="text-sm text-slate-400">
+                Simplifying student accommodation searches with AI-driven insights and verified listings.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Safety Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Community Guidelines</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center space-x-2"><Phone size={14}/> <span>+1 (555) 123-4567</span></li>
+                <li>support@campussphere.com</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
+            &copy; {new Date().getFullYear()} Campus Sphere. All rights reserved.
+          </div>
+        </div>
+      </footer>
+
+      {/* Booking Modal */}
+      <BookingModal 
+        hostel={selectedHostel} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onBook={handleBookingSubmit}
+      />
+      <ChatBot />
+
+    </div>
+  );
+};
+
+export default App;
