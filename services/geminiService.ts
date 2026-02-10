@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Hostel, MarketInsight, SearchResult, AccommodationType } from '../types';
 
-const apiKey = 'AIzaSyAVo35k3sL2jLvKlz9fA84QuN75bXtV-g0';
+const apiKey = '';
 const ai = new GoogleGenAI({ apiKey });
 
 export const fetchHostelsByCollege = async (collegeName: string): Promise<SearchResult> => {
